@@ -1,23 +1,16 @@
 import React from "react";
 import Task from "../data/Task";
-import {Table} from "antd";
-import { ColumnProps } from 'antd/es/table';
+import {Form, Input, Button, Modal} from "antd";
+import {FormComponentProps} from "antd/lib/form";
+import axios, {AxiosResponse} from 'axios';
 
-interface CourierProps {
+interface CourierProps extends FormComponentProps {
 
 }
 
 interface CourierState {
     readonly loadTasks: Task[]
 }
-
-const columns: ColumnProps<Task>[] = [
-    {
-        key: "orderNumber",
-        title: "Order Number",
-        dataIndex: "orderNumber"
-    }
-];
 
 class CourierPage extends React.PureComponent<CourierProps, CourierState> {
 
@@ -28,23 +21,51 @@ class CourierPage extends React.PureComponent<CourierProps, CourierState> {
         }
     }
 
-    componentDidMount(): void {
-        // this.setState({
-        //     loadTasks: [
-        //         {
-        //             orderNumber: "123",
-        //             createdDate: "123"
-        //         }
-        //     ]
-        // })
-    }
+    handleSubmit = (e: { preventDefault: () => void; }) => {
+        e.preventDefault();
+        this.props.form.validateFields((err, value) => {
+            if (err) {
+                console.log("Error while validating fields: ", err);
+                return;
+            }
+
+            const {orderNumber} = value;
+            axios.put<{ readonly orderName: string }, AxiosResponse<any>>("/v1/task/create_new_task", {"orderNumber": orderNumber})
+                .then(() => {
+                    Modal.success({
+                        content: `A new order with a name: ${orderNumber} successfully created.`
+                    })
+                })
+                .catch(reason => {
+                    console.error(`Error while creating a new order with a name ${orderNumber}`, reason);
+                    Modal.error({
+                        content: `Can't create an order with a name: ${orderNumber}.`
+                    })
+                })
+        })
+    };
 
     render(): any {
+        const {getFieldDecorator} = this.props.form;
         return (
-            <Table<Task> dataSource={this.state.loadTasks} columns={columns}>
-            </Table>
+            <Form onSubmit={this.handleSubmit} title={"Add new order."}>
+                <Form.Item>
+                    {getFieldDecorator('orderNumber', {
+                        rules: [
+                            {required: true}
+                        ]
+                    })(
+                        <Input placeholder={"Order number"}/>
+                    )}
+                </Form.Item>
+                <Form.Item>
+                    <Button type={"primary"} htmlType={"submit"}>
+                        I do not have time.
+                    </Button>
+                </Form.Item>
+            </Form>
         );
     }
 }
 
-export default CourierPage;
+export default Form.create<CourierProps>()(CourierPage);
