@@ -1,6 +1,6 @@
 {
-  "short_name": "React App",
-  "name": "Create React App Sample",
+  "short_name": "CDEK Test App",
+  "name": "CDEK Test App with couriers and operators.",
   "icons": [
     {
       "src": "favicon.ico",
